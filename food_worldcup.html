@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>음식 이상형 월드컵</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .game-info {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .round-info {
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .battle-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .food-card {
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .food-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-color: #667eea;
+        }
+
+        .food-card.selected {
+            border-color: #4caf50;
+            background: #f1f8f4;
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+        }
+
+        .food-image {
+            width: 100%;
+            max-width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none; /* 추후 이미지 추가 시 block으로 변경 */
+        }
+
+        .food-image.show {
+            display: block;
+        }
+
+        .food-name {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+            margin-top: 20px;
+        }
+
+        .food-card:has(.food-image.show) .food-name {
+            margin-top: 0;
+        }
+
+        .vs {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .winner-screen {
+            display: none;
+        }
+
+        .winner-screen.show {
+            display: block;
+        }
+
+        .winner-card {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 30px 0;
+            box-shadow: 0 10px 40px rgba(251, 191, 36, 0.3);
+        }
+
+        .winner-title {
+            font-size: 3em;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .winner-name {
+            font-size: 2.5em;
+            color: white;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .winner-image {
+            width: 100%;
+            max-width: 300px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin: 20px auto;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .winner-image.show {
+            display: block;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+            margin: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .game-screen {
+            display: none;
+        }
+
+        .game-screen.show {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .battle-area {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .vs {
+                position: relative;
+                top: auto;
+                left: auto;
+                transform: none;
+                margin: 10px auto;
+            }
+
+            .food-card {
+                min-height: 200px;
+            }
+
+            .food-name {
+                font-size: 1.5em;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="start-screen" id="startScreen">
+            <h1>🍽️ 음식 이상형 월드컵 🍽️</h1>
+            <p class="subtitle">당신이 가장 좋아하는 음식을 찾아보세요!</p>
+            <div class="game-info">
+                <p>총 <span id="totalFoods">0</span>개의 음식이 참가합니다.</p>
+                <p>2개씩 비교하여 최종 우승자를 뽑으세요!</p>
+            </div>
+            <button onclick="startGame()">게임 시작</button>
+        </div>
+
+        <div class="game-screen" id="gameScreen">
+            <div class="game-info">
+                <div class="round-info" id="roundInfo">1라운드</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+            </div>
+
+            <div class="battle-area" id="battleArea">
+                <div class="food-card" id="foodCard1" onclick="selectFood(1)">
+                    <img class="food-image" id="foodImage1" alt="음식 이미지">
+                    <div class="food-name" id="foodName1">음식 1</div>
+                </div>
+                <div class="vs">VS</div>
+                <div class="food-card" id="foodCard2" onclick="selectFood(2)">
+                    <img class="food-image" id="foodImage2" alt="음식 이미지">
+                    <div class="food-name" id="foodName2">음식 2</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="winner-screen" id="winnerScreen">
+            <h1>🏆 우승자 발표 🏆</h1>
+            <div class="winner-card">
+                <div class="winner-title">최종 우승</div>
+                <img class="winner-image" id="winnerImage" alt="우승 음식">
+                <div class="winner-name" id="winnerName">음식 이름</div>
+            </div>
+            <button onclick="restartGame()">다시 하기</button>
+        </div>
+    </div>
+
+    <script>
+        // 음식 리스트 (추후 이미지 경로 추가 가능)
+        const FOODS = [
+            { name: "짜장면", image: null },
+            { name: "김치찌개", image: null },
+            { name: "비빔밥", image: null },
+            { name: "불고기", image: null },
+            { name: "삼겹살", image: null },
+            { name: "치킨", image: null },
+            { name: "피자", image: null },
+            { name: "햄버거", image: null },
+            { name: "초밥", image: null },
+            { name: "라멘", image: null },
+            { name: "파스타", image: null },
+            { name: "스테이크", image: null },
+            { name: "떡볶이", image: null },
+            { name: "순두부찌개", image: null },
+            { name: "된장찌개", image: null },
+            { name: "갈비탕", image: null },
+            { name: "냉면", image: null },
+            { name: "삼계탕", image: null },
+            { name: "보쌈", image: null },
+            { name: "족발", image: null },
+            { name: "마라탕", image: null },
+            { name: "타코", image: null },
+            { name: "샐러드", image: null },
+            { name: "타코야키", image: null },
+            { name: "오므라이스", image: null },
+            { name: "카레", image: null },
+            { name: "돈까스", image: null },
+            { name: "우동", image: null },
+            { name: "팟타이", image: null },
+            { name: "파인애플피자", image: null },
+            { name: "김밥", image: null },
+            { name: "순대", image: null },
+        ];
+
+        let currentRound = [];
+        let roundNumber = 1;
+        let totalRounds = 0;
+        let currentBattle = [];
+        let selectedFood = null;
+        let roundStartCount = 0; // 라운드 시작 시 음식 수
+        let roundProgress = 0; // 현재 라운드에서 진행된 대결 수
+
+        // 게임 시작
+        function startGame() {
+            // 음식 섞기
+            const shuffled = [...FOODS].sort(() => Math.random() - 0.5);
+            currentRound = shuffled;
+            roundNumber = 1;
+            selectedFood = null;
+            roundProgress = 0;
+            roundStartCount = shuffled.length;
+
+            // 총 라운드 수 계산
+            calculateTotalRounds();
+
+            // UI 전환
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameScreen').classList.add('show');
+            document.getElementById('winnerScreen').classList.remove('show');
+
+            // 총 음식 수 표시
+            document.getElementById('totalFoods').textContent = FOODS.length;
+
+            // 첫 라운드 시작
+            playRound();
+        }
+
+        // 총 라운드 수 계산
+        function calculateTotalRounds() {
+            let count = currentRound.length;
+            totalRounds = 0;
+            while (count > 1) {
+                count = Math.ceil(count / 2);
+                totalRounds++;
+            }
+        }
+
+        // 라운드 진행
+        function playRound() {
+            if (currentRound.length <= 1) {
+                announceWinner();
+                return;
+            }
+
+            // 라운드 정보 업데이트
+            const remaining = currentRound.length;
+            const totalBattles = Math.ceil(roundStartCount / 2); // 이 라운드의 총 대결 수
+            const progressText = `${roundNumber}라운드 (${roundStartCount}강) - ${roundProgress + 1}/${totalBattles}`;
+            document.getElementById('roundInfo').textContent = progressText;
+
+            // 진행률 계산 (전체 게임 진행률)
+            const overallProgress = ((totalRounds - roundNumber + 1) / totalRounds) * 100;
+            document.getElementById('progressBar').style.width = overallProgress + '%';
+
+            // 다음 대결 준비
+            if (currentBattle.length === 0) {
+                prepareNextBattle();
+            } else {
+                showBattle();
+            }
+        }
+
+        // 다음 대결 준비
+        function prepareNextBattle() {
+            if (currentRound.length === 0) {
+                // 라운드 완료, 다음 라운드로
+                roundNumber++;
+                if (currentRound.length <= 1) {
+                    announceWinner();
+                    return;
+                }
+            }
+
+            // 2개씩 가져오기
+            if (currentRound.length >= 2) {
+                currentBattle = [currentRound.shift(), currentRound.shift()];
+                showBattle();
+            } else if (currentRound.length === 1) {
+                // 홀수 개일 때 마지막 음식 자동 진출
+                const autoAdvance = currentRound.shift();
+                advanceToNextRound(autoAdvance);
+            }
+        }
+
+        // 대결 화면 표시
+        function showBattle() {
+            if (currentBattle.length !== 2) {
+                prepareNextBattle();
+                return;
+            }
+
+            const food1 = currentBattle[0];
+            const food2 = currentBattle[1];
+
+            // 카드 초기화
+            document.getElementById('foodCard1').classList.remove('selected');
+            document.getElementById('foodCard2').classList.remove('selected');
+            selectedFood = null;
+
+            // 음식 1 표시
+            document.getElementById('foodName1').textContent = food1.name;
+            const img1 = document.getElementById('foodImage1');
+            if (food1.image) {
+                img1.src = food1.image;
+                img1.classList.add('show');
+            } else {
+                img1.classList.remove('show');
+            }
+
+            // 음식 2 표시
+            document.getElementById('foodName2').textContent = food2.name;
+            const img2 = document.getElementById('foodImage2');
+            if (food2.image) {
+                img2.src = food2.image;
+                img2.classList.add('show');
+            } else {
+                img2.classList.remove('show');
+            }
+        }
+
+        // 음식 선택
+        function selectFood(index) {
+            if (selectedFood !== null || currentBattle.length !== 2) return;
+
+            selectedFood = index;
+            const winner = currentBattle[index - 1];
+
+            // 선택된 카드 표시
+            document.getElementById(`foodCard${index}`).classList.add('selected');
+
+            // 약간의 딜레이 후 다음으로
+            setTimeout(() => {
+                advanceToNextRound(winner);
+            }, 500);
+        }
+
+        // 다음 라운드로 진출
+        function advanceToNextRound(winner) {
+            // 다음 라운드 배열에 추가 (아직 초기화되지 않았다면)
+            if (!window.nextRound) {
+                window.nextRound = [];
+            }
+            window.nextRound.push(winner);
+
+            // 현재 라운드 진행 상황 업데이트
+            roundProgress++;
+
+            currentBattle = [];
+
+            // 현재 라운드가 끝났는지 확인
+            if (currentRound.length === 0) {
+                // 다음 라운드로
+                currentRound = window.nextRound;
+                window.nextRound = [];
+                roundNumber++;
+                roundProgress = 0; // 새 라운드 시작
+                roundStartCount = currentRound.length; // 새 라운드의 시작 음식 수
+
+                if (currentRound.length === 1) {
+                    // 우승자 결정
+                    announceWinner();
+                    return;
+                }
+            }
+
+            // 다음 대결
+            playRound();
+        }
+
+        // 우승자 발표
+        function announceWinner() {
+            const winner = currentRound[0];
+
+            document.getElementById('gameScreen').classList.remove('show');
+            document.getElementById('winnerScreen').classList.add('show');
+
+            document.getElementById('winnerName').textContent = winner.name;
+
+            const winnerImg = document.getElementById('winnerImage');
+            if (winner.image) {
+                winnerImg.src = winner.image;
+                winnerImg.classList.add('show');
+            } else {
+                winnerImg.classList.remove('show');
+            }
+        }
+
+        // 게임 재시작
+        function restartGame() {
+            document.getElementById('startScreen').style.display = 'block';
+            document.getElementById('gameScreen').classList.remove('show');
+            document.getElementById('winnerScreen').classList.remove('show');
+            currentRound = [];
+            roundNumber = 1;
+            currentBattle = [];
+            selectedFood = null;
+            roundProgress = 0;
+            roundStartCount = 0;
+            window.nextRound = [];
+        }
+
+        // 초기화
+        window.onload = function() {
+            document.getElementById('totalFoods').textContent = FOODS.length;
+        };
+    </script>
+</body>
+</html>
+
